@@ -10,7 +10,6 @@ export class CartItem implements PrismaCartItem {
   createdAt: Date;
   updatedAt: Date;
   
-  // Campos adicionais não presentes no modelo Prisma
   coffee?: {
     id: string;
     name: string;
