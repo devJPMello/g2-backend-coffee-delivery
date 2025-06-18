@@ -1,49 +1,54 @@
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Coffee {
-  id          String     @id @default(uuid())
+  id          String   @id @default(uuid())
   name        String
   description String
-  price       Decimal    @db.Decimal(10, 2)
+  price       Decimal  @db.Decimal(10, 2)
   imageUrl    String
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  
-  // Relacionamentos incompleto
-  // tags
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tags      CoffeeTag[]
+  cartItems CartItem[]
 }
 
 model Tag {
-  id        String      @id @default(uuid())
-  name      String      @unique
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  
-  // Relacionamentos 
-  coffees   CoffeeTag[]
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  coffees CoffeeTag[]
 }
 
 model CoffeeTag {
-  coffeeId  String
-  tagId     String
-  // Relacionamentos aqui
+  coffee   Coffee @relation(fields: [coffeeId], references: [id])
+  coffeeId String
+
+  tag   Tag    @relation(fields: [tagId], references: [id])
+  tagId String
+
+  @@id([coffeeId, tagId]) // chave composta (many-to-many)
 }
 
 model Cart {
-  id        String     @id @default(uuid())
-  userId    String?    // Opcional para usuários não autenticados
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  
-  // Relacionamentos incompleto
-  items     CartItem[]
+  id                String        @id @default(uuid())
+  userId            String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  status            CartStatus
+  statusPayment     PaymentStatus
+  dataTimeCompleted DateTime?
+
+  items CartItem[]
 }
 
 model CartItem {
@@ -52,6 +57,23 @@ model CartItem {
   unitPrice  Decimal  @db.Decimal(10, 2)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  
-  // Relacionamentos aqui
+
+  cart     Cart   @relation(fields: [cartId], references: [id])
+  cartId   String
+
+  coffee   Coffee @relation(fields: [coffeeId], references: [id])
+  coffeeId String
+}
+
+enum CartStatus {
+  ABANDONADO
+  AGUARDANDO_PAGAMENTO
+  FINALIZADO
+}
+
+enum PaymentStatus {
+  APROVADO
+  ANALISE
+  PENDENTE
+  CANCELADO
 }
